@@ -1,36 +1,53 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="intro">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#041c20">
 <title>Smit Kapani</title>
+<link rel="preload" href="fonts/monocraft.woff2" as="font" type="font/woff2" crossorigin>
 <style>
-  * { box-sizing: border-box; margin: 0; }
-  body { background: #041c20; color: #f4f0e8; font: 15px/1.5 Menlo, Consolas, monospace; overflow: hidden; height: 100dvh; }
+  /* Monocraft (SIL OFL, github.com/IdreesInc/Monocraft), cut down to the characters this page uses */
+  @font-face { font-family: Monocraft; src: url(fonts/monocraft.woff2) format("woff2"); font-display: swap; }
+  * { box-sizing: border-box; margin: 0; font-weight: normal; }
+  body { background: #041c20; color: #f4f0e8; font: 14px/1.6 Monocraft, Menlo, monospace; overflow: hidden; height: 100dvh; }
   a { color: inherit; }
 
   /* the pond: rotated to portrait, covering the screen, brightened; dimmed off the landing slide */
-  #pond { position: fixed; top: 50%; left: 50%; width: max-content; max-width: none; transform: translate(-50%, -50%) rotate(90deg); filter: brightness(1.6) saturate(1.2); transition: opacity .6s; }
+  #pond { position: fixed; top: 50%; left: 50%; width: max-content; max-width: none; transform: translate(-50%, -50%) rotate(90deg); filter: brightness(1.6) saturate(1.2); clip-path: circle(100%); transition: opacity .6s, clip-path 2s ease-out; }
+  .intro #pond { clip-path: circle(0); }
+
+  /* intro: a retro pixel "?" block; the first tap bumps it and ripples out to reveal the pond */
+  #q { position: fixed; top: 50%; left: 50%; width: 128px; translate: -50% -50%; shape-rendering: crispEdges; filter: drop-shadow(0 0 24px #e8a02855); animation: bob 1.6s steps(2) infinite; }
+  @keyframes bob { 50% { translate: -50% calc(-50% - 4px); } }
+  html:not(.intro) #q { animation: bump .5s forwards; pointer-events: none; }
+  @keyframes bump { 30% { translate: -50% calc(-50% - 24px); opacity: 1; } 100% { opacity: 0; } }
+  .intro main { opacity: 0; pointer-events: none; }
+  .intro body { background: #000; }
+  .intro body::after { display: none; }
+  #lucky { position: fixed; top: max(24px, env(safe-area-inset-top)); left: 20px; right: 20px; padding: 12px; text-align: center; text-decoration: none; background: linear-gradient(90deg, #b8860b, #ffd700, #fff0b0, #ffd700, #b8860b); color: #2a1400; opacity: 0; translate: 0 -20px; transition: .4s; pointer-events: none; }
+  #lucky.show { opacity: 1; translate: 0; pointer-events: auto; }
   body:not(.home) #pond { opacity: .25; }
   /* a slow sheen drifting across the water */
   body::after { content: ""; position: fixed; inset: -50%; pointer-events: none; mix-blend-mode: screen; background: linear-gradient(115deg, transparent 40%, #ffffff30 50%, transparent 60%); animation: sheen 9s ease-in-out infinite alternate; }
   @keyframes sheen { to { translate: 30% 20%; } }
 
   /* slides: home in view, more to the right, connect below; the track moves to show one */
-  main { position: fixed; inset: 0; transition: transform .6s cubic-bezier(.7, 0, .2, 1); }
+  main { position: fixed; inset: 0; transition: transform .6s cubic-bezier(.7, 0, .2, 1), opacity 1s 1.4s; }
   .more main { transform: translateX(-100%); }
   .connect main { transform: translateY(-100%); }
   section { position: absolute; inset: 0; padding: max(24px, env(safe-area-inset-top)) 20px max(24px, env(safe-area-inset-bottom)); }
   .s-more { translate: 100% 0; overflow-y: auto; }
   .s-connect { translate: 0 100%; display: flex; flex-direction: column; justify-content: center; gap: 16px; text-align: center; }
 
-  .name { position: absolute; top: 50%; left: 50%; translate: -50% -50%; text-align: center; white-space: nowrap; padding: 16px 28px; background: #4a4844; border: 1px solid #9a948a; box-shadow: 0 4px 20px #0008; }
-  .name h1 { font-size: 28px; }
+  /* the name surfaces: blurred and sunk in the water, then sharp */
+  .name { position: absolute; top: 50%; left: 0; right: 0; translate: 0 -50%; text-align: center; white-space: nowrap; text-shadow: 0 0 6px #041c20, 0 0 16px #041c20, 0 2px 0 #041c20; transition: filter 1.5s 1s, opacity 1.5s 1s, scale 1.5s 1s; }
+  .intro .name { filter: blur(8px); opacity: 0; scale: .85; }
+  .name h1 { font-size: 32px; }
   .btn { position: absolute; display: block; padding: 12px 18px; text-decoration: none; border: 1px solid #f4f0e8; background: #041c20cc; backdrop-filter: blur(4px); }
   .go-more { right: 0; top: 50%; translate: 0 -50%; writing-mode: vertical-rl; border-right: 0; }
   .go-connect { left: 20px; right: 20px; bottom: max(24px, env(safe-area-inset-bottom)); text-align: center; }
-  .s-connect .btn { position: static; font-weight: bold; }
+  .s-connect .btn { position: static; }
   .linkedin { background: #0a66c2; border-color: #0a66c2; }
   .whatsapp { background: #25d366; border-color: #25d366; color: #041c20; }
   .back { color: #9a948a; text-decoration: none; }
@@ -43,6 +60,8 @@
 </head>
 <body class="home">
 <div id="pond"><pre></pre></div>
+<svg id="q" viewBox="0 0 16 16" role="button" aria-label="Reveal"></svg>
+<a id="lucky" href="#connect">🍀 You caught the lucky koi! Let's connect →</a>
 
 <main>
   <section>
@@ -61,12 +80,12 @@
     <p>I turn regulated complexity into working AI systems. From the first business conversation to an operational workflow — fast, auditable, observable. Based in Dubai.</p>
 
     <h2>// selected work · NBF</h2>
+    <h3>Credit Appraisal Workflow</h3>
+    <p>Turns 18+ audited financials and business documents into a structured credit application draft.</p>
     <h3>Payment Sanction Screening</h3>
     <p>Screens payment messages for sanctions risk using NLP and LLMs, with an analyst making the final call.</p>
     <h3>Driving AI Adoption</h3>
     <p>Helping teams across the bank find where AI actually moves the work, and getting it into their hands.</p>
-    <h3>Credit Appraisal Workflow</h3>
-    <p>Turns 18+ audited financials and business documents into a structured credit application draft.</p>
     <h3>More in progress…</h3>
     <p>A few more projects are underway — ask me about them.</p>
 
@@ -98,13 +117,35 @@
   pre.style.fontSize = px + "px";
   play(pre, koi);
   // The pond is turned 90° clockwise about the screen centre: screen down is along its columns, screen left along its rows.
+  const html = document.documentElement, lucky = document.querySelector("#lucky");
   addEventListener("pointerdown", (e) => {
-    const col = (e.clientY - innerHeight / 2) / (px * 0.602) + koi.meta.cols / 2;
-    const row = (innerWidth / 2 - e.clientX) / px + koi.meta.rows / 2;
-    koi.tap(col, row * 2);
+    const x = (e.clientY - innerHeight / 2) / (px * 0.602) + koi.meta.cols / 2;
+    const y = ((innerWidth / 2 - e.clientX) / px + koi.meta.rows / 2) * 2;
+    if (html.classList.contains("intro")) { html.classList.remove("intro"); koi.tap(x, y, 90); surface(); return; }
+    const caught = document.body.classList.contains("home") && Math.hypot(x - koi.gold.x, y - koi.gold.y) < 8;
+    koi.tap(x, y, caught ? 30 : 14);
+    if (caught) { lucky.classList.add("show"); setTimeout(() => lucky.classList.remove("show"), 4000); }
   });
+  // Letters settle out of the water from left to right.
+  function surface() {
+    const h1 = document.querySelector(".name h1"), name = h1.textContent;
+    let i = -10;
+    const tick = setInterval(() => {
+      h1.textContent = [...name].map((c, k) => k < i || c === " " ? c : "░▒▓"[Math.random() * 3 | 0]).join("");
+      if (++i > name.length) clearInterval(tick);
+    }, 90);
+  }
 </script>
 <script>
+  // The "?" block, one letter per pixel: outline, light, block, shade, question mark, its shadow.
+  const C = { K: "#2a1400", Y: "#ffd27a", O: "#e8a028", D: "#9a5410", Q: "#fff4d6", S: "#5a2c00" };
+  document.querySelector("#q").innerHTML = [
+    ".KKKKKKKKKKKKKK.", "KYYYYYYYYYYYYYYK", "KYKOOOOOOOOOOKDK", "KYOOOOQQQQOOOODK",
+    "KYOOOQQSSQQOOODK", "KYOOOQQSOQQSOODK", "KYOOOOSSOQQSOODK", "KYOOOOOOQQSSOODK",
+    "KYOOOOOQQSSOOODK", "KYOOOOOQQSOOOODK", "KYOOOOOOSSOOOODK", "KYOOOOOQQOOOOODK",
+    "KYOOOOOQQSOOOODK", "KYKOOOOOSSOOOKDK", "KDDDDDDDDDDDDDDK", ".KKKKKKKKKKKKKK.",
+  ].flatMap((row, y) => [...row].map((c, x) => C[c] ? `<rect x="${x}" y="${y}" width="1" height="1" fill="${C[c]}"/>` : "")).join("");
+
   // #more / #connect pick the slide, so the phone's back button works too.
   const show = () => document.body.className = location.hash.slice(1) || "home";
   addEventListener("hashchange", show);

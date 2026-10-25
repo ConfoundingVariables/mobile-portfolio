@@ -10,7 +10,8 @@ const STONE = add(gradient(["#2a2a2a", "#4a4844", "#6e6a62", "#9a948a", "#c4bcb0
 const MOSS = add(["#2a4a1e", "#3e6a2a"]);
 const PAD = add(gradient(["#123a14", "#1e5a1e", "#2e7a28", "#4c9a3a", "#7abc5a"], 8));
 const LOTUS = add(["#f4a4c4", "#ffd4e4", "#ffe87a", "#c85a8a"]);
-const KOI = add(["#ff5a1a", "#ff8a3a", "#f4f0e8", "#c8c4bc", "#1a1a1e", "#ffc83a", "#ffe08a", "#d03a10"]);
+// 5, 6 and 8 are the golden koi: metallic gold, deep gold and a glint (dark here, the page brightens the pond)
+const KOI = add(["#ff5a1a", "#ff8a3a", "#f4f0e8", "#c8c4bc", "#1a1a1e", "#a08800", "#7a6200", "#d03a10", "#fff4c0"]);
 
 export const meta = {
   slug: "koi-pond-ripples",
@@ -30,9 +31,11 @@ const FISH = [
 ];
 const PADS = [[14, 10, 7], [72, 9, 8], [78, 52, 7], [20, 54, 6], [56, 22, 5.5], [32, 40, 5]];
 
-// Ripples only where the visitor taps: push { x: col, y: row * 2 }, at most five at once.
+// Ripples only where the visitor taps (x: col, y: row * 2), at most five at once.
 export const taps = [];
-export const tap = (x, y) => { taps.push({ x, y }); if (taps.length > 5) taps.shift(); };
+export const tap = (x, y, size = 14) => { taps.push({ x, y, size }); if (taps.length > 5) taps.shift(); };
+// Where the golden koi's head is, in the same units, so a tap can catch it.
+export const gold = { x: 0, y: 0 };
 
 export default function create() {
   const { cols, rows } = meta;
@@ -63,6 +66,8 @@ export default function create() {
         const [x, y] = pos(f, s0 - (k * 1.0) / (Math.abs(f.w) * f.ax));
         pts.push([x, y]);
       }
+      if (f.kind === 1) [gold.x, gold.y] = pts[0];
+      if (f.kind === 1) for (let i = 0; i < 3; i++) if (Math.sin(t * 2.3 + i * 2.1) > 0.8) g.set(pts[i * 5][0] + 4 * Math.cos(i * 2), (pts[i * 5][1] + 6 * Math.sin(i * 2)) / 2, "+", KEYS[KOI + 8]); // sparkles
       for (let k = f.len; k >= 0; k--) {
         const u = k / f.len;
         let [x, y] = pts[k];
@@ -78,7 +83,7 @@ export default function create() {
           const n = noise2(k * 0.5 + f.ph * 7, side * 1.5, 13);
           let c;
           if (f.kind === 0) c = n > 0.5 ? (side < -0.2 ? 1 : 0) : 2;
-          else if (f.kind === 1) c = side < -0.3 ? 6 : 5;
+          else if (f.kind === 1) c = Math.sin(k * 0.7 - t * 4) > 0.9 ? 8 : n > 0.55 || side < -0.4 ? 6 : 5; // gold scales with a glint running down
           else c = n > 0.62 ? 4 : n > 0.42 ? 7 : 2;
           if (k === 0 && f.kind !== 1) c = 2;
           g.set(sx, sy, side < -0.6 ? "▓" : "█", KEYS[KOI + c]);
@@ -98,7 +103,7 @@ export default function create() {
       d.t0 ??= t;
       const a = (t - d.t0) / 4;
       if (a > 0.8) { taps.splice(taps.indexOf(d), 1); continue; }
-      const r = 1 + a * 14;
+      const r = 1 + a * d.size;
       const k = a < 0.25 ? 2 : a < 0.55 ? 1 : 0;
       const n = Math.ceil(r * 7);
       for (let i = 0; i < n; i++) {
