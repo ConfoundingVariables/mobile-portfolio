@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#041c20">
+<title>Smit Kapani</title>
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  body { background: #041c20; color: #f4f0e8; font: 15px/1.5 Menlo, Consolas, monospace; overflow: hidden; height: 100dvh; }
+  a { color: inherit; }
+
+  /* the pond: rotated to portrait, covering the screen, brightened; dimmed off the landing slide */
+  #pond { position: fixed; top: 50%; left: 50%; width: max-content; max-width: none; transform: translate(-50%, -50%) rotate(90deg); filter: brightness(1.6) saturate(1.2); transition: opacity .6s; }
+  body:not(.home) #pond { opacity: .25; }
+  /* a slow sheen drifting across the water */
+  body::after { content: ""; position: fixed; inset: -50%; pointer-events: none; mix-blend-mode: screen; background: linear-gradient(115deg, transparent 40%, #ffffff30 50%, transparent 60%); animation: sheen 9s ease-in-out infinite alternate; }
+  @keyframes sheen { to { translate: 30% 20%; } }
+
+  /* slides: home in view, more to the right, connect below; the track moves to show one */
+  main { position: fixed; inset: 0; transition: transform .6s cubic-bezier(.7, 0, .2, 1); }
+  .more main { transform: translateX(-100%); }
+  .connect main { transform: translateY(-100%); }
+  section { position: absolute; inset: 0; padding: max(24px, env(safe-area-inset-top)) 20px max(24px, env(safe-area-inset-bottom)); }
+  .s-more { translate: 100% 0; overflow-y: auto; }
+  .s-connect { translate: 0 100%; display: flex; flex-direction: column; justify-content: center; gap: 16px; text-align: center; }
+
+  .name { position: absolute; top: 50%; left: 50%; translate: -50% -50%; text-align: center; white-space: nowrap; padding: 16px 28px; background: #4a4844; border: 1px solid #9a948a; box-shadow: 0 4px 20px #0008; }
+  .name h1 { font-size: 28px; }
+  .btn { position: absolute; display: block; padding: 12px 18px; text-decoration: none; border: 1px solid #f4f0e8; background: #041c20cc; backdrop-filter: blur(4px); }
+  .go-more { right: 0; top: 50%; translate: 0 -50%; writing-mode: vertical-rl; border-right: 0; }
+  .go-connect { left: 20px; right: 20px; bottom: max(24px, env(safe-area-inset-bottom)); text-align: center; }
+  .s-connect .btn { position: static; font-weight: bold; }
+  .linkedin { background: #0a66c2; border-color: #0a66c2; }
+  .whatsapp { background: #25d366; border-color: #25d366; color: #041c20; }
+  .back { color: #9a948a; text-decoration: none; }
+
+  .s-more h2 { color: #ff8a3a; font-size: 15px; margin: 28px 0 8px; }
+  .s-more h3 { font-size: 15px; margin-top: 16px; }
+  .s-more p, .s-more li { color: #c8c4bc; }
+  .s-more ul { padding-left: 18px; }
+</style>
+</head>
+<body class="home">
+<div id="pond"><pre></pre></div>
+
+<main>
+  <section>
+    <div class="name">
+      <h1>Smit Kapani</h1>
+      <p>AI Engineer</p>
+    </div>
+    <a class="btn go-more" href="#more">know more →</a>
+    <a class="btn go-connect" href="#connect">connect with me ↓</a>
+  </section>
+
+  <section class="s-more">
+    <a class="back" href="#">← back</a>
+
+    <h2>// about</h2>
+    <p>I turn regulated complexity into working AI systems. From the first business conversation to an operational workflow — fast, auditable, observable. Based in Dubai.</p>
+
+    <h2>// selected work · NBF</h2>
+    <h3>Payment Sanction Screening</h3>
+    <p>Screens payment messages for sanctions risk using NLP and LLMs, with an analyst making the final call.</p>
+    <h3>Driving AI Adoption</h3>
+    <p>Helping teams across the bank find where AI actually moves the work, and getting it into their hands.</p>
+    <h3>Credit Appraisal Workflow</h3>
+    <p>Turns 18+ audited financials and business documents into a structured credit application draft.</p>
+    <h3>More in progress…</h3>
+    <p>A few more projects are underway — ask me about them.</p>
+
+    <h2>// what I bring</h2>
+    <ul>
+      <li>Coding agents</li>
+      <li>Systems design</li>
+      <li>Business analysis</li>
+      <li>End-to-end delivery: requirements to go-live</li>
+    </ul>
+  </section>
+
+  <section class="s-connect">
+    <p>Let's keep talking.</p>
+    <!-- linkedin.com links are universal / app links: they open the LinkedIn app when it's installed -->
+    <a class="btn linkedin" href="https://www.linkedin.com/in/smitkapani">LinkedIn</a>
+    <a class="btn whatsapp" href="https://wa.me/971508751604">WhatsApp</a>
+    <a class="btn" href="smit-kapani.vcf">Save contact</a>
+    <a class="back" href="#">↑ back</a>
+  </section>
+</main>
+
+<script type="module">
+  import { play } from "./vendor/player.js";
+  import * as koi from "./koi.js";
+  // A cell is 0.602 × 1 of the font size; rotated, size the pond so it covers the screen.
+  const pre = document.querySelector("#pond pre");
+  const px = Math.ceil(Math.max(innerWidth / koi.meta.rows, innerHeight / (koi.meta.cols * 0.602)));
+  pre.style.fontSize = px + "px";
+  play(pre, koi);
+  // The pond is turned 90° clockwise about the screen centre: screen down is along its columns, screen left along its rows.
+  addEventListener("pointerdown", (e) => {
+    const col = (e.clientY - innerHeight / 2) / (px * 0.602) + koi.meta.cols / 2;
+    const row = (innerWidth / 2 - e.clientX) / px + koi.meta.rows / 2;
+    koi.tap(col, row * 2);
+  });
+</script>
+<script>
+  // #more / #connect pick the slide, so the phone's back button works too.
+  const show = () => document.body.className = location.hash.slice(1) || "home";
+  addEventListener("hashchange", show);
+  show();
+</script>
+</body>
+</html>
