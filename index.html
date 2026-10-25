@@ -24,13 +24,9 @@
   @keyframes bump { 30% { translate: -50% calc(-50% - 24px); opacity: 1; } 100% { opacity: 0; } }
   .intro main { opacity: 0; pointer-events: none; }
   .intro body { background: #000; }
-  .intro body::after { display: none; }
   #lucky { position: fixed; top: max(24px, env(safe-area-inset-top)); left: 20px; right: 20px; padding: 12px; text-align: center; text-decoration: none; background: linear-gradient(90deg, #b8860b, #ffd700, #fff0b0, #ffd700, #b8860b); color: #2a1400; opacity: 0; translate: 0 -20px; transition: .4s; pointer-events: none; }
   #lucky.show { opacity: 1; translate: 0; pointer-events: auto; }
   body:not(.home) #pond { opacity: .25; }
-  /* a slow sheen drifting across the water */
-  body::after { content: ""; position: fixed; inset: -50%; pointer-events: none; will-change: translate; background: linear-gradient(115deg, transparent 40%, #ffffff1c 50%, transparent 60%); animation: sheen 9s ease-in-out infinite alternate; }
-  @keyframes sheen { to { translate: 30% 20%; } }
 
   /* slides: home in view, more to the right, connect below; the track moves to show one */
   main { position: fixed; inset: 0; transition: transform .6s cubic-bezier(.7, 0, .2, 1), opacity 1s 1.4s; }
@@ -60,7 +56,7 @@
 </style>
 </head>
 <body class="home">
-<div id="pond"><pre></pre></div>
+<div id="pond"></div>
 <svg id="q" viewBox="0 0 16 16" role="button" aria-label="Reveal"></svg>
 <a id="lucky" href="#connect">🍀 You caught the lucky koi! Let's connect →</a>
 
@@ -110,14 +106,43 @@
 </main>
 
 <script type="module">
-  import { play } from "./vendor/player.js";
   import * as koi from "./koi.js";
   // A cell is 0.602 × 1 of the font size; rotated, size the pond so it covers the screen.
-  const pre = document.querySelector("#pond pre");
-  const px = Math.ceil(Math.max(innerWidth / koi.meta.rows, innerHeight / (koi.meta.cols * 0.602)));
-  pre.style.fontSize = px + "px";
-  play(pre, koi);
-  // The pond is turned 90° clockwise about the screen centre: screen down is along its columns, screen left along its rows.
+  const { cols, rows, palette } = koi.meta, dpr = Math.min(2, devicePixelRatio);
+  const px = Math.ceil(Math.max(innerWidth / rows, innerHeight / (cols * 0.602)));
+  const cv = document.createElement("canvas"), ctx = cv.getContext("2d", { alpha: false });
+  cv.width = Math.round(cols * px * 0.602 * dpr); cv.height = rows * px * dpr;
+  cv.style.width = cv.width / dpr + "px"; cv.style.height = cv.height / dpr + "px";
+  document.querySelector("#pond").append(cv);
+
+  // Each glyph in each colour is drawn once into a tile, then stamped: far cheaper than fillText.
+  const X = (c) => Math.round(c * px * 0.602 * dpr), Y = (r) => r * px * dpr, tiles = new Map();
+  function stamp(ctx, c, g, i) {
+    const x = X(i % cols), y = Y(Math.floor(i / cols)), w = X(i % cols + 1) - x, h = px * dpr, fill = palette[c];
+    if (g === "█") { ctx.fillStyle = fill; return ctx.fillRect(x, y, w, h); }
+    let t = tiles.get(g + fill);
+    if (!t) {
+      t = new OffscreenCanvas(w + 1, h); const tc = t.getContext("2d");
+      tc.font = `${px * dpr}px Menlo, Consolas, monospace`; tc.textBaseline = "middle"; tc.fillStyle = fill; tc.fillText(g, 0, h / 2);
+      tiles.set(g + fill, t);
+    }
+    ctx.drawImage(t, x, y);
+  }
+
+  // Paint the still water once; each frame copies it and stamps only the cells that differ (fish, pads, ripples).
+  const frame = koi.default(), base = new OffscreenCanvas(cv.width, cv.height);
+  frame(0);
+  const bctx = base.getContext("2d");
+  bctx.fillStyle = "#041c20"; bctx.fillRect(0, 0, cv.width, cv.height);
+  koi.bg.forEach(([g, c], i) => stamp(bctx, c, g, i));
+  const t0 = performance.now();
+  (function loop(now) {
+    const g = frame((now - t0) / 1000);
+    ctx.drawImage(base, 0, 0);
+    for (let i = 0; i < g.ch.length; i++) if (g.ch[i] !== koi.bg[i][0] || g.co[i] !== koi.bg[i][1]) stamp(ctx, g.co[i], g.ch[i], i);
+    requestAnimationFrame(loop);
+  })(t0);
+
   const html = document.documentElement, lucky = document.querySelector("#lucky");
   addEventListener("pointerdown", (e) => {
     const x = (e.clientY - innerHeight / 2) / (px * 0.602) + koi.meta.cols / 2;

@@ -39,11 +39,13 @@ export const tap = (x, y, size = 14) => { taps.push({ x, y, size }); if (taps.le
 // Where the golden koi's head is, in the same units, so a tap can catch it.
 export const gold = { x: 0, y: 0 };
 
+// The still water, [glyph, colour key, depth] per cell, filled by create(); the page paints it once.
+export const bg = [];
+
 export default function create() {
   const { cols, rows } = meta;
   const g = new Grid(cols, rows);
   const W = cols, H = rows * 2;
-  const bg = [];
   for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
     const ex = Math.min(x, cols - 1 - x) / 6, ey = Math.min(y, rows - 1 - y) / 3;
     const edge = Math.min(ex, ey) + (noise2(x * 0.3, y * 0.6, 3) - 0.5) * 0.8;
@@ -138,6 +140,6 @@ export default function create() {
         g.set(lx - 2, ly - 1, "▓", KEYS[PAD + 3]); g.set(lx + 2, ly - 1, "▓", KEYS[PAD + 3]);
       }
     });
-    return g.frame();
+    return g;
   };
 }
