@@ -14,7 +14,7 @@
   a { color: inherit; }
 
   /* the pond: rotated to portrait, covering the screen, brightened; dimmed off the landing slide */
-  #pond { position: fixed; top: 50%; left: 50%; width: max-content; max-width: none; transform: translate(-50%, -50%) rotate(90deg); filter: brightness(1.6) saturate(1.2); clip-path: circle(100%); transition: opacity .6s, clip-path 2s ease-out; }
+  #pond { position: fixed; top: 50%; left: 50%; width: max-content; max-width: none; transform: translate(-50%, -50%) rotate(90deg); clip-path: circle(100%); transition: opacity .6s, clip-path 2s ease-out; }
   .intro #pond { clip-path: circle(0); }
 
   /* intro: a retro pixel "?" block; the first tap bumps it and ripples out to reveal the pond */
@@ -29,7 +29,7 @@
   #lucky.show { opacity: 1; translate: 0; pointer-events: auto; }
   body:not(.home) #pond { opacity: .25; }
   /* a slow sheen drifting across the water */
-  body::after { content: ""; position: fixed; inset: -50%; pointer-events: none; mix-blend-mode: screen; background: linear-gradient(115deg, transparent 40%, #ffffff30 50%, transparent 60%); animation: sheen 9s ease-in-out infinite alternate; }
+  body::after { content: ""; position: fixed; inset: -50%; pointer-events: none; will-change: translate; background: linear-gradient(115deg, transparent 40%, #ffffff1c 50%, transparent 60%); animation: sheen 9s ease-in-out infinite alternate; }
   @keyframes sheen { to { translate: 30% 20%; } }
 
   /* slides: home in view, more to the right, connect below; the track moves to show one */
@@ -38,13 +38,14 @@
   .connect main { transform: translateY(-100%); }
   section { position: absolute; inset: 0; padding: max(24px, env(safe-area-inset-top)) 20px max(24px, env(safe-area-inset-bottom)); }
   .s-more { translate: 100% 0; overflow-y: auto; }
+  section { touch-action: none; } .s-more { touch-action: pan-y; } /* swipes are ours; the know-more slide still scrolls */
   .s-connect { translate: 0 100%; display: flex; flex-direction: column; justify-content: center; gap: 16px; text-align: center; }
 
   /* the name surfaces: blurred and sunk in the water, then sharp */
   .name { position: absolute; top: 50%; left: 0; right: 0; translate: 0 -50%; text-align: center; white-space: nowrap; text-shadow: 0 0 6px #041c20, 0 0 16px #041c20, 0 2px 0 #041c20; transition: filter 1.5s 1s, opacity 1.5s 1s, scale 1.5s 1s; }
   .intro .name { filter: blur(8px); opacity: 0; scale: .85; }
   .name h1 { font-size: 32px; }
-  .btn { position: absolute; display: block; padding: 12px 18px; text-decoration: none; border: 1px solid #f4f0e8; background: #041c20cc; backdrop-filter: blur(4px); }
+  .btn { position: absolute; display: block; padding: 12px 18px; text-decoration: none; border: 1px solid #f4f0e8; background: #041c20d9; }
   .go-more { right: 0; top: 50%; translate: 0 -50%; writing-mode: vertical-rl; border-right: 0; }
   .go-connect { left: 20px; right: 20px; bottom: max(24px, env(safe-area-inset-bottom)); text-align: center; }
   .s-connect .btn { position: static; }
@@ -149,6 +150,16 @@
   // #more / #connect pick the slide, so the phone's back button works too.
   const show = () => document.body.className = location.hash.slice(1) || "home";
   addEventListener("hashchange", show);
+  // Swipes: left for know more, up for connect, and the opposite way back home.
+  let sx, sy;
+  addEventListener("touchstart", (e) => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, { passive: true });
+  addEventListener("touchend", (e) => {
+    if (document.documentElement.classList.contains("intro")) return;
+    const dx = e.changedTouches[0].clientX - sx, dy = e.changedTouches[0].clientY - sy, at = document.body.className;
+    const go = (h) => { location.hash = h; };
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) { if (at === "home" && dx < 0) go("more"); if (at === "more" && dx > 0) go(""); }
+    else if (Math.abs(dy) > 50) { if (at === "home" && dy < 0) go("connect"); if (at === "connect" && dy > 0) go(""); }
+  });
   show();
 </script>
 </body>

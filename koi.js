@@ -2,6 +2,8 @@
  * Copied from ASCII Magic (MIT, ascii-magic.com/ascii/koi-pond-ripples), changed to a longer pond with no stone edge. */
 import { Grid, palette, gradient, KEYS, fbm, noise2, clamp, TAU } from "./vendor/kit.js";
 
+// Brighten every colour 1.6× here, not with a CSS filter: a filter on the animated canvas costs a full repaint each frame.
+const lit = (h) => "#" + [1, 3, 5].map((i) => Math.min(255, Math.round(parseInt(h.slice(i, i + 2), 16) * 1.6)).toString(16).padStart(2, "0")).join("");
 const P = [];
 const add = (c) => { const o = P.length; P.push(...c); return o; };
 const WATER = add(gradient(["#062a30", "#0a3a42", "#0e4a52", "#165c62", "#227070", "#2e8480"], 10));
@@ -10,7 +12,7 @@ const STONE = add(gradient(["#2a2a2a", "#4a4844", "#6e6a62", "#9a948a", "#c4bcb0
 const MOSS = add(["#2a4a1e", "#3e6a2a"]);
 const PAD = add(gradient(["#123a14", "#1e5a1e", "#2e7a28", "#4c9a3a", "#7abc5a"], 8));
 const LOTUS = add(["#f4a4c4", "#ffd4e4", "#ffe87a", "#c85a8a"]);
-// 5, 6 and 8 are the golden koi: metallic gold, deep gold and a glint (dark here, the page brightens the pond)
+// 5, 6 and 8 are the golden koi: metallic gold, deep gold and a glint (dark here, lit() brightens them)
 const KOI = add(["#ff5a1a", "#ff8a3a", "#f4f0e8", "#c8c4bc", "#1a1a1e", "#a08800", "#7a6200", "#d03a10", "#fff4c0"]);
 
 export const meta = {
@@ -19,8 +21,8 @@ export const meta = {
   category: "animals",
   note: "Seen from above, orange, white and golden koi glide in slow loops beneath lily pads while rings spread across the dark pond water.",
   tags: ["koi", "fish", "pond", "zen", "calm", "wallpaper"],
-  cols: 112, rows: 34, fps: 24,
-  palette: palette(P),
+  cols: 112, rows: 34, fps: 60,
+  palette: palette(P.map(lit)),
 };
 
 const FISH = [
